@@ -58,7 +58,8 @@ namespace ReactiveProperty
 
             // get the newly bound attribute, and IReactiveProperty
             INamedTypeSymbol attributeSymbol = compilation.GetTypeByMetadataName("ReactiveProperty.ReactivePropertyAttribute");
-            INamedTypeSymbol baseSymbol = compilation.GetTypeByMetadataName("ReactiveProperty.ReactivePropertyBase");
+            INamedTypeSymbol baseSymbol = compilation.GetTypeByMetadataName("ReactiveProperty.ReactivePropertyBaseImpl");
+            INamedTypeSymbol interfaceSymbol = compilation.GetTypeByMetadataName("ReactiveProperty.IReactiveProperty");
 
             List<(IFieldSymbol, Location)> fieldSymbols = new List<(IFieldSymbol, Location)>();
             foreach (FieldDeclarationSyntax fieldDeclaration in receiver.CandidateFields)
@@ -101,7 +102,7 @@ namespace ReactiveProperty
                         throw new GeneratorException(GeneratorException.Reason.Partial, classDeclaration.GetLocation(), group.Key.Name);
                     }
 
-                    ProcessClass(group.Key.Name, (group.Key, classDeclaration.GetLocation()), group.ToList(), attributeSymbol, baseSymbol, context);
+                    ProcessClass(group.Key.Name, (group.Key, classDeclaration.GetLocation()), group.ToList(), attributeSymbol, baseSymbol, interfaceSymbol, context);
                     context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.RPG000ClassGenerated(group.Key.Name), classDeclaration.GetLocation()));
                 }
                 catch (GeneratorException ex)
@@ -111,7 +112,7 @@ namespace ReactiveProperty
             }
         }
 
-        private static void ProcessClass(string groupName, (INamedTypeSymbol classSymbol, Location location) cd, List<(IFieldSymbol, Location)> fields, ISymbol attributeSymbol, ISymbol baseSymbol, SourceGeneratorContext context)
+        private static void ProcessClass(string groupName, (INamedTypeSymbol classSymbol, Location location) cd, List<(IFieldSymbol, Location)> fields, ISymbol attributeSymbol, ISymbol baseSymbol, ISymbol interfaceSymbol, SourceGeneratorContext context)
         {
             // class must be top level
             if (!cd.classSymbol.ContainingSymbol.Equals(cd.classSymbol.ContainingNamespace, SymbolEqualityComparer.Default))
@@ -120,9 +121,9 @@ namespace ReactiveProperty
             }
 
             // class must be derived from known base
-            if (cd.classSymbol.BaseType == null || !cd.classSymbol.BaseType.Equals(baseSymbol, SymbolEqualityComparer.Default))
+            if (!cd.classSymbol.Interfaces.Contains(interfaceSymbol))
             {
-                throw new GeneratorException(GeneratorException.Reason.Base, cd.location, groupName);
+                context.ReportDiagnostic(Diagnostic.Create(GeneratorException.CreateDescriptor(GeneratorException.Reason.Interface, groupName), cd.location));
             }
 
             string namespaceName = cd.classSymbol.ContainingNamespace.ToDisplayString();

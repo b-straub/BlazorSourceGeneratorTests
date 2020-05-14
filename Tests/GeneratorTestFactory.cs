@@ -11,7 +11,7 @@ namespace Tests
 {
     public static class GeneratorTestFactory
     {
-        public static string GenerateTestClass(bool baseClass = true, bool partial = true, bool topLevel = true, string attribute = "[ReactiveProperty]")
+        public static string GenerateTestClass(bool useInterface = true, bool partial = true, bool topLevel = true, string attribute = "[ReactiveProperty]")
         {
             var sb = new StringBuilder();
 
@@ -27,7 +27,7 @@ namespace Tests
                 sb.Append("\t{\r\n");
             }
 
-            sb.Append($"\t\tpublic {(partial ? "partial" : "")} class TestClass {(baseClass ? " : ReactivePropertyBase" : "")}\r\n");
+            sb.Append($"\t\tpublic {(partial ? "partial" : "")} class TestClass {(useInterface ? " : IReactiveProperty" : "")}\r\n");
             sb.Append("\t\t{\r\n");
             sb.Append($"\t\t\t{attribute}\r\n");
             sb.Append("\t\t\tprivate string _testString = \"Test\";\r\n");
@@ -62,7 +62,7 @@ namespace Tests
             var references = new MetadataReference[]
             {
                 MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
-                MetadataReference.CreateFromFile(typeof(ReactivePropertyBase).Assembly.Location)
+                MetadataReference.CreateFromFile(typeof(IReactiveProperty).Assembly.Location)
             };
 
             Compilation compilation = CSharpCompilation.Create("testgenerator", new[] { syntaxTree }, references, compilationOptions);

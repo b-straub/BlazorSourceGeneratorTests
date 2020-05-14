@@ -21,9 +21,9 @@ class C { }
         public void TestMissingBase()
         {
             var generatorDiagnostics = GeneratorTestFactory
-                .RunGenerator(GeneratorTestFactory.GenerateTestClass(baseClass: false));
+                .RunGenerator(GeneratorTestFactory.GenerateTestClass(useInterface: false));
 
-            Assert.True(generatorDiagnostics.Any(x => x.Id == GeneratorException.Reason.Base.Description()));
+            Assert.True(generatorDiagnostics.Any(x => x.Id == GeneratorException.Reason.Interface.Description()));
         }
 
         [Fact]

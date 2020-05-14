@@ -13,7 +13,7 @@ namespace Generator
         {
             Unkown,
             [Description("RPG100")]
-            Base,
+            Interface,
             [Description("RPG101")]
             Partial,
             [Description("RPG102")]
@@ -60,10 +60,10 @@ namespace Generator
             context.ReportDiagnostic(Diagnostic.Create(CreateDescriptor(_reason, _reasonContext), location));
         }
 
-        private static DiagnosticDescriptor CreateDescriptor(Reason reason, string context) => reason switch
+        public static DiagnosticDescriptor CreateDescriptor(Reason reason, string context) => reason switch
         {
             Reason.Unkown => throw new ArgumentOutOfRangeException(reason.ToString()),
-            Reason.Base => DiagnosticDescriptors.Base(context, reason.Description()),
+            Reason.Interface => DiagnosticDescriptors.Interface(context, reason.Description()),
             Reason.Partial => DiagnosticDescriptors.Partial(context, reason.Description()),
             Reason.TopLevel => DiagnosticDescriptors.TopLevel(context, reason.Description()),
             Reason.FieldEmpty => DiagnosticDescriptors.FieldEmpty(context, reason.Description()),
@@ -96,14 +96,14 @@ namespace Generator
                 isEnabledByDefault: true);
         }
 
-        public static DiagnosticDescriptor Base(string className, string id)
+        public static DiagnosticDescriptor Interface(string className, string id)
         {
             return new DiagnosticDescriptor(
                  $"{id}",
                 "Base",
-                $"{className} must be derived from ReactivePropertyBase",
+                $"{className} should mention interface IReactiveProperty",
                 "Compilation",
-                DiagnosticSeverity.Error,
+                DiagnosticSeverity.Warning,
                 isEnabledByDefault: true);
         }
 

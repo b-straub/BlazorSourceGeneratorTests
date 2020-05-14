@@ -4,7 +4,7 @@ using ReactiveProperty;
 
 namespace ReactiveViewModels
 {
-    public partial class ReactiveTestViewModel : ReactivePropertyBase
+    public partial class ReactiveTestViewModel : IReactiveProperty
     {
         private const string _answer = "Answer to the Ultimate Question of Life, the Universe, and Everything";
         private const string _button = @"Push ""Update Text"" to update";
