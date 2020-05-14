@@ -1,6 +1,7 @@
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Xunit;
+using Generator;
 
 namespace Tests
 {
@@ -17,12 +18,12 @@ class C { }
         }
 
         [Fact]
-        public void TestTopLevel()
+        public void TestMissingBase()
         {
             var generatorDiagnostics = GeneratorTestFactory
-                .RunGenerator(GeneratorTestFactory.GenerateTestClass(topLevel: false));
+                .RunGenerator(GeneratorTestFactory.GenerateTestClass(baseClass: false));
 
-            Assert.True(generatorDiagnostics.Any(x => x.Id == "RPG102"));
+            Assert.True(generatorDiagnostics.Any(x => x.Id == GeneratorException.Reason.Base.Description()));
         }
 
         [Fact]
@@ -31,34 +32,34 @@ class C { }
             var generatorDiagnostics = GeneratorTestFactory
                 .RunGenerator(GeneratorTestFactory.GenerateTestClass(partial: false));
 
-            Assert.True(generatorDiagnostics.Any(x => x.Id == "RPG101"));
+            Assert.True(generatorDiagnostics.Any(x => x.Id == GeneratorException.Reason.Partial.Description()));
         }
 
         [Fact]
-        public void TestMissingBase()
+        public void TestTopLevel()
         {
             var generatorDiagnostics = GeneratorTestFactory
-                .RunGenerator(GeneratorTestFactory.GenerateTestClass(baseClass: false));
+                .RunGenerator(GeneratorTestFactory.GenerateTestClass(topLevel: false));
 
-            Assert.True(generatorDiagnostics.Any(x => x.Id == "RPG104"));
+            Assert.True(generatorDiagnostics.Any(x => x.Id == GeneratorException.Reason.TopLevel.Description()));
         }
 
         [Fact]
-        public void TestDuplicateName()
-        {
-            var generatorDiagnostics = GeneratorTestFactory
-                .RunGenerator(GeneratorTestFactory.GenerateTestClass(attribute: @"[ReactiveProperty(PropertyName = ""_test"")]"));
-
-            Assert.True(generatorDiagnostics.Any(x => x.Id == "RPG103"));
-        }
-
-        [Fact]
-        public void TestEmptyName()
+        public void TestFieldEmpty()
         {
             var generatorDiagnostics = GeneratorTestFactory
                .RunGenerator(GeneratorTestFactory.GenerateTestClass(attribute: @"[ReactiveProperty(PropertyName = """")]"));
 
-            Assert.True(generatorDiagnostics.Any(x => x.Id == "RPG103"));
+            Assert.True(generatorDiagnostics.Any(x => x.Id == GeneratorException.Reason.FieldEmpty.Description()));
+        }
+
+        [Fact]
+        public void TestFieldDuplicate()
+        {
+            var generatorDiagnostics = GeneratorTestFactory
+                .RunGenerator(GeneratorTestFactory.GenerateTestClass(attribute: @"[ReactiveProperty(PropertyName = ""_testNumber"")]"));
+
+            Assert.True(generatorDiagnostics.Any(x => x.Id == GeneratorException.Reason.FieldDuplicate.Description()));
         }
 
         [Fact]

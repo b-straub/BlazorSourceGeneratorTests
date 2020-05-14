@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis;
@@ -11,13 +12,20 @@ namespace Generator
         public enum Reason
         {
             Unkown,
+            [Description("RPG100")]
+            Base,
+            [Description("RPG101")]
             Partial,
+            [Description("RPG102")]
             TopLevel,
-            Field,
-            Base
+            [Description("RPG103")]
+            FieldEmpty,
+            [Description("RPG104")]
+            FieldDuplicate
         }
 
         private Reason _reason = Reason.Unkown;
+        private Location _location = Location.None;
         private string _reasonContext = "";
      
         public GeneratorException()
@@ -33,35 +41,35 @@ namespace Generator
             : base(message, inner)
         {
         }
-        public GeneratorException(Reason reason, string reasonContext = "")
+        public GeneratorException(Reason reason, Location location, string reasonContext = "")
         {
             _reason = reason;
+            _location = location;
             _reasonContext = reasonContext;
         }
+
         public void ReportDiagnostic(SourceGeneratorContext context, string filePath = "")
         {
-            var loc = DiagnosticDescriptors.GetLocation(filePath, LineNumber());
+            var location = _location;
 
-            switch (_reason)
+            if (_location == Location.None)
             {
-                case Reason.Unkown: 
-                    throw new ArgumentOutOfRangeException(_reason.ToString());
-                case Reason.Partial:
-                    context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.RPG101Partial(_reasonContext), loc));
-                    break;
-                case Reason.TopLevel:
-                    context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.RPG102TopLevel(_reasonContext), loc));
-                    break;
-                case Reason.Field:
-                    context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.RPG103Field(_reasonContext), loc));
-                    break;
-                case Reason.Base:
-                    context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.RPG104Base(_reasonContext), loc));
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(_reason.ToString());
+                location = DiagnosticDescriptors.GetLocation(filePath, LineNumber());
             }
+
+            context.ReportDiagnostic(Diagnostic.Create(CreateDescriptor(_reason, _reasonContext), location));
         }
+
+        private static DiagnosticDescriptor CreateDescriptor(Reason reason, string context) => reason switch
+        {
+            Reason.Unkown => throw new ArgumentOutOfRangeException(reason.ToString()),
+            Reason.Base => DiagnosticDescriptors.Base(context, reason.Description()),
+            Reason.Partial => DiagnosticDescriptors.Partial(context, reason.Description()),
+            Reason.TopLevel => DiagnosticDescriptors.TopLevel(context, reason.Description()),
+            Reason.FieldEmpty => DiagnosticDescriptors.FieldEmpty(context, reason.Description()),
+            Reason.FieldDuplicate => DiagnosticDescriptors.FieldDuplicate(context, reason.Description()),
+            _ => throw new ArgumentOutOfRangeException(reason.ToString())
+        };
 
         private int LineNumber()
         {
@@ -80,7 +88,7 @@ namespace Generator
         public static DiagnosticDescriptor RPG100SyntaxReceiver()
         {
             return new DiagnosticDescriptor(
-                "RPG100",
+                "RPG1",
                 "No SyntaxReceiver",
                 "Can not populate SyntaxReceiver",
                 "Compilation",
@@ -88,10 +96,21 @@ namespace Generator
                 isEnabledByDefault: true);
         }
 
-        public static DiagnosticDescriptor RPG101Partial(string className)
+        public static DiagnosticDescriptor Base(string className, string id)
         {
             return new DiagnosticDescriptor(
-                "RPG101",
+                 $"{id}",
+                "Base",
+                $"{className} must be derived from ReactivePropertyBase",
+                "Compilation",
+                DiagnosticSeverity.Error,
+                isEnabledByDefault: true);
+        }
+
+        public static DiagnosticDescriptor Partial(string className, string id)
+        {
+            return new DiagnosticDescriptor(
+                $"{id}",
                 "Partial",
                 $"{className} must be declared partial",
                 "Compilation",
@@ -99,10 +118,10 @@ namespace Generator
                 isEnabledByDefault: true);
         }
 
-        public static DiagnosticDescriptor RPG102TopLevel(string className)
+        public static DiagnosticDescriptor TopLevel(string className, string id)
         {
             return new DiagnosticDescriptor(
-                "RPG102",
+                $"{id}",
                 "Top level",
                 $"{className} must be at top level",
                 "Compilation",
@@ -110,22 +129,22 @@ namespace Generator
                 isEnabledByDefault: true);
         }
 
-        public static DiagnosticDescriptor RPG103Field(string fieldName)
+        public static DiagnosticDescriptor FieldEmpty(string fieldName, string id)
         {
             return new DiagnosticDescriptor(
-                "RPG103",
-                "Property generation",
-                $"Invalid property {fieldName}",
+                $"{id}",
+                "PropertyName",
+                $"Empty PropertyName {fieldName}",
                 "Compilation",
                 DiagnosticSeverity.Error,
                 isEnabledByDefault: true);
         }
-        public static DiagnosticDescriptor RPG104Base(string className)
+        public static DiagnosticDescriptor FieldDuplicate(string fieldName, string id)
         {
             return new DiagnosticDescriptor(
-                "RPG104",
-                "Base",
-                $"{className} must be derived from ReactivePropertyBase",
+                $"{id}",
+                "PropertyName",
+                $"PropertyName same as backing field {fieldName}",
                 "Compilation",
                 DiagnosticSeverity.Error,
                 isEnabledByDefault: true);

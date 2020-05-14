@@ -1,0 +1,2 @@
+[*.cs]
+dotnet_code_quality.CA1062.exclude_extension_method_this_parameter = true
