@@ -67,8 +67,6 @@ namespace ReactiveProperty
 
             // get the newly bound attribute, and IReactiveProperty
             INamedTypeSymbol attributeSymbol = compilation.GetTypeByMetadataName("ReactiveProperty.ReactivePropertyAttribute");
-            var doc = attributeSymbol.GetDocumentationCommentXml();
-
             INamedTypeSymbol baseSymbol = compilation.GetTypeByMetadataName("ReactiveProperty.ReactivePropertyImpl");
             INamedTypeSymbol interfaceSymbol = compilation.GetTypeByMetadataName("ReactiveProperty.IReactiveProperty");
 
