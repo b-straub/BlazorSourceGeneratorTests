@@ -30,14 +30,14 @@ namespace ReactiveProperty
         public void AddToDisposeBag(IDisposable disposable);
     }
 
-    public class ReactivePropertyBaseImpl : IReactiveProperty
+    public class ReactivePropertyImpl : IReactiveProperty
     {
         public IObservable<string> Changed { get => _changed.Where(x => !string.IsNullOrEmpty(x)).AsObservable(); }
 
         private readonly BehaviorSubject<string> _changed = new BehaviorSubject<string>("");
         private readonly CompositeDisposable _disposeBag = new CompositeDisposable();
 
-        public ReactivePropertyBaseImpl()
+        public ReactivePropertyImpl()
         {
         }
 

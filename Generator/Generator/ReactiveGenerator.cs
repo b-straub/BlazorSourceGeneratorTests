@@ -20,6 +20,15 @@ using System;
 
 namespace ReactiveProperty
 {
+    /// <summary>
+    /// An reactive attribute that can only be attached to classes.
+    /// <example>For example:
+    /// <code>
+    /// [ReactiveProperty(PropertyName = ""MagicNumber"")]
+    ///    private int _magicNumberField = 42;
+    /// </code>
+    /// </example>
+    /// </summary>
     [AttributeUsage(AttributeTargets.Field, Inherited = false, AllowMultiple = false)]
     sealed class ReactivePropertyAttribute : Attribute
     {
@@ -58,7 +67,9 @@ namespace ReactiveProperty
 
             // get the newly bound attribute, and IReactiveProperty
             INamedTypeSymbol attributeSymbol = compilation.GetTypeByMetadataName("ReactiveProperty.ReactivePropertyAttribute");
-            INamedTypeSymbol baseSymbol = compilation.GetTypeByMetadataName("ReactiveProperty.ReactivePropertyBaseImpl");
+            var doc = attributeSymbol.GetDocumentationCommentXml();
+
+            INamedTypeSymbol baseSymbol = compilation.GetTypeByMetadataName("ReactiveProperty.ReactivePropertyImpl");
             INamedTypeSymbol interfaceSymbol = compilation.GetTypeByMetadataName("ReactiveProperty.IReactiveProperty");
 
             List<(IFieldSymbol, Location)> fieldSymbols = new List<(IFieldSymbol, Location)>();
