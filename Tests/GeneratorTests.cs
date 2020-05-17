@@ -1,7 +1,7 @@
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Xunit;
-using Generator;
+using ReactivePropertyGenerator;
 
 namespace Tests
 {

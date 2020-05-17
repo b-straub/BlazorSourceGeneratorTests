@@ -4,8 +4,8 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
-using Generator;
 using ReactiveProperty;
+using ReactivePropertyGenerator;
 
 namespace Tests
 {
@@ -73,7 +73,7 @@ namespace Tests
                 return diagnostics;
             }
 
-            var generator = new ReactivePropertyGenerator();
+            var generator = new Generator();
             var parseOptions = syntaxTree.Options as CSharpParseOptions;
 
             GeneratorDriver driver = new CSharpGeneratorDriver(parseOptions, ImmutableArray.Create<ISourceGenerator>(generator), ImmutableArray<AdditionalText>.Empty);

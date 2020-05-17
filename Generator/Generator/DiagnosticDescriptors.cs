@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
-namespace Generator
+namespace ReactivePropertyGenerator
 {
     public class GeneratorException : Exception
     {

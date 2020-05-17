@@ -10,12 +10,12 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
-namespace Generator
+namespace ReactivePropertyGenerator
 {
     [Generator]
-    public class ReactivePropertyGenerator : ISourceGenerator
+    public class Generator : ISourceGenerator
     {
-        private string attributeText = new StringBuilder().Append(@"
+        private readonly string attributeText = new StringBuilder().Append(@"
 using System;
 
 namespace ReactiveProperty
