@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Composition;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -15,31 +13,7 @@ namespace ReactivePropertyGenerator
     [Generator]
     public class Generator : ISourceGenerator
     {
-        private readonly string attributeText = new StringBuilder().Append(@"
-using System;
-
-namespace ReactiveProperty
-{
-    /// <summary>
-    /// An reactive attribute that can only be attached to classes.
-    /// <example>For example:
-    /// <code>
-    /// [ReactiveProperty(PropertyName = ""MagicNumber"")]
-    ///    private int _magicNumberField = 42;
-    /// </code>
-    /// </example>
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Field, Inherited = false, AllowMultiple = false)]
-    sealed class ReactivePropertyAttribute : Attribute
-    {
-        public ReactivePropertyAttribute()
-        {
-        }
-        public string PropertyName { get; set; }
-    }
-}
-").ToString();
-
+        private readonly List<(string fieldName, string propertyName, ITypeSymbol propertyType)> _fieldList = new List<(string fieldName, string propertyName, ITypeSymbol propertyType)>();
         public void Initialize(InitializationContext context)
         {
             // Register a syntax receiver that will be created for each generation pass
@@ -49,8 +23,7 @@ namespace ReactiveProperty
         public void Execute(SourceGeneratorContext context)
         {
             // add the attribute text
-            var attributeInterfaceSource = SourceText.From(attributeText, Encoding.UTF8);
-            context.AddSource("ReactivePropertyAttribute", attributeInterfaceSource);
+            context.AddSource("ReactivePropertyAttribute", SourceTextProvider.AttributeSource());
 
             // retreive the populated receiver 
             if (!(context.SyntaxReceiver is SyntaxReceiver receiver))
@@ -63,7 +36,7 @@ namespace ReactiveProperty
             // we're going to create a new compilation that contains the attribute and interface.
             // TODO: we should allow source generators to provide source during initialize, so that this step isn't required.
             CSharpParseOptions options = (context.Compilation as CSharpCompilation).SyntaxTrees[0].Options as CSharpParseOptions;
-            Compilation compilation = context.Compilation.AddSyntaxTrees(CSharpSyntaxTree.ParseText(SourceText.From(attributeText, Encoding.UTF8), options));
+            Compilation compilation = context.Compilation.AddSyntaxTrees(CSharpSyntaxTree.ParseText(SourceTextProvider.AttributeSource(), options));
 
             // get the newly bound attribute, and IReactiveProperty
             INamedTypeSymbol attributeSymbol = compilation.GetTypeByMetadataName("ReactiveProperty.ReactivePropertyAttribute");
@@ -121,7 +94,7 @@ namespace ReactiveProperty
             }
         }
 
-        private static void ProcessClass(string groupName, (INamedTypeSymbol classSymbol, Location location) cd, List<(IFieldSymbol, Location)> fields, ISymbol attributeSymbol, ISymbol baseSymbol, ISymbol interfaceSymbol, SourceGeneratorContext context)
+        private void ProcessClass(string groupName, (INamedTypeSymbol classSymbol, Location location) cd, List<(IFieldSymbol, Location)> fields, ISymbol attributeSymbol, ISymbol baseSymbol, ISymbol interfaceSymbol, SourceGeneratorContext context)
         {
             // class must be top level
             if (!cd.classSymbol.ContainingSymbol.Equals(cd.classSymbol.ContainingNamespace, SymbolEqualityComparer.Default))
@@ -139,32 +112,44 @@ namespace ReactiveProperty
 
             // begin building the generated source
             StringBuilder source = new StringBuilder($@"
+using System;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Reactive.Linq;
+using System.Reflection;
+
 namespace {namespaceName}
 {{
     public partial class {cd.classSymbol.Name} : {baseSymbol.ToDisplayString()}
     {{
 ");
 
-            // create properties for each field 
+            // create properties for each field
+            _fieldList.Clear();
             foreach ((IFieldSymbol, Location) fieldDesriptor in fields)
             {
                 ProcessField(source, fieldDesriptor, attributeSymbol);
             }
 
+            source.Append("\r\n");
+
+            source.Append(SourceTextProvider.ReactiveSource(_fieldList));
             source.Append("\t}\r\n}");
 
             var sourceText = SourceText.From(source.ToString(), Encoding.UTF8);
 
+            //ReactivePropertyGeneratorExtensions.DumpGeneratedSource(sourceText, context);
+
             context.AddSource($"{groupName}_reactiveProperty.cs", sourceText);
         }
 
-        private static void ProcessField(StringBuilder source, (IFieldSymbol fieldSymbol, Location location) fd, ISymbol attributeSymbol)
+        private void ProcessField(StringBuilder source, (IFieldSymbol fieldSymbol, Location location) fd, ISymbol attributeSymbol)
         {
             // get the name and type of the field
             string fieldName = fd.fieldSymbol.Name;
             ITypeSymbol fieldType = fd.fieldSymbol.Type;
 
-            // get the AutoNotify attribute from the field, and any associated data
+            // get the ReactiveAttribute attribute from the field, and any associated data
             AttributeData attributeData = fd.fieldSymbol.GetAttributes().Single(ad => ad.AttributeClass.Equals(attributeSymbol, SymbolEqualityComparer.Default));
             TypedConstant overridenNameOpt = attributeData.NamedArguments.SingleOrDefault(kvp => kvp.Key == "PropertyName").Value;
 
@@ -177,6 +162,8 @@ namespace {namespaceName}
             {
                 throw new GeneratorException(GeneratorException.Reason.FieldDuplicate, fd.location, propertyName);
             }
+
+            _fieldList.Add((fieldName, propertyName, fieldType));
 
             source.Append($@"
         public {fieldType} {propertyName} 

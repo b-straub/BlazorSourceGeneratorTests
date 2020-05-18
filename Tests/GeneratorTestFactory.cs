@@ -30,10 +30,16 @@ namespace Tests
             sb.Append($"\t\tpublic {(partial ? "partial" : "")} class TestClass {(useInterface ? " : IReactiveProperty" : "")}\r\n");
             sb.Append("\t\t{\r\n");
             sb.Append($"\t\t\t{attribute}\r\n");
-            sb.Append("\t\t\tprivate string _testString = \"Test\";\r\n");
+            sb.Append("\t\t\tprivate string _testString1 = \"Test1\";\r\n");
             sb.Append("\r\n");
             sb.Append($"\t\t\t{attribute}\r\n");
-            sb.Append("\t\t\tprivate int _testNumber = 42;\r\n");
+            sb.Append("\t\t\tprivate string _testString2 = \"Test2\";\r\n");
+            sb.Append("\r\n");
+            sb.Append($"\t\t\t{attribute}\r\n");
+            sb.Append("\t\t\tprivate int _testNumber1 = 42;\r\n");
+            sb.Append("\r\n");
+            sb.Append($"\t\t\t{attribute}\r\n");
+            sb.Append("\t\t\tprivate int _testNumber2 = 0;\r\n");
             sb.Append("\t\t}\r\n");
 
             if (!topLevel)

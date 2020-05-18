@@ -57,7 +57,7 @@ class C { }
         public void TestFieldDuplicate()
         {
             var generatorDiagnostics = GeneratorTestFactory
-                .RunGenerator(GeneratorTestFactory.GenerateTestClass(attribute: @"[ReactiveProperty(PropertyName = ""_testNumber"")]"));
+                .RunGenerator(GeneratorTestFactory.GenerateTestClass(attribute: @"[ReactiveProperty(PropertyName = ""_testNumber1"")]"));
 
             Assert.True(generatorDiagnostics.Any(x => x.Id == GeneratorException.Reason.FieldDuplicate.Description()));
         }

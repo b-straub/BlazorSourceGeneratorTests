@@ -1,5 +1,6 @@
 using System;
 using System.Reactive.Linq;
+using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Components;
 using ReactiveViewModels;
 
@@ -10,14 +11,12 @@ namespace ReactiveComponents.Components
         [Inject]
         public ReactiveTestViewModel ViewModel { get; set; }
 
-        public ReactiveTest()
-        {
+        private ReactiveViewProxy _viewProxy;
 
-        }
 
         protected override void OnInitialized()
         {
-            ViewModel.Changed.Subscribe(x => StateHasChanged());
+            _viewProxy = new ReactiveViewProxy(ViewModel, StateHasChanged);
         }
 
         private void IncrementCount()
@@ -29,5 +28,6 @@ namespace ReactiveComponents.Components
         {
             ViewModel.Text = $"Reactive count: {ViewModel.Count}!";
         }
+
     }
 }
