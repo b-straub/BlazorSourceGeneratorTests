@@ -1,7 +1,4 @@
 # BlazorSourceGeneratorTests
-**A test project for exploring the new Roslyn SourceGenerator feature**
+## This project was replaced by ##
 
-*Prerequisites:*
-
-- Visual Studio 2019 Preview
-- .NET 5.0 SDK
+https://github.com/b-straub/ObservableTests 
